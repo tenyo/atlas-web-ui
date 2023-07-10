@@ -1,0 +1,371 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$defs": {
+        "App": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "repoURL": {
+                    "type": "string"
+                },
+                "repoPath": {
+                    "type": "string"
+                },
+                "revision": {
+                    "type": "string"
+                },
+                "manifestType": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "string"
+                },
+                "syncWave": {
+                    "type": "string"
+                },
+                "autoSync": {
+                    "type": "boolean"
+                },
+                "clusterValuesFile": {
+                    "type": "boolean"
+                },
+                "environmentValuesFile": {
+                    "type": "boolean"
+                },
+                "skipCrds": {
+                    "type": "boolean"
+                },
+                "additionalValuesFiles": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "syncOptions": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "annotations": {
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "name",
+                "repoURL"
+            ],
+            "description": "App represents an application that will be deployed into a kubernetes cluster and will be represented in argo as an AppProject"
+        },
+        "LimitRange": {
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "resourceLists": {
+                    "items": {
+                        "$ref": "#/$defs/ResourceList"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "type",
+                "resourceLists"
+            ],
+            "description": "LimitRange is used to apply limits ranges on resources to deployments"
+        },
+        "Namespace": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "clusterAddon": {
+                    "type": "boolean"
+                },
+                "skipRBACRestrictions": {
+                    "type": "boolean"
+                },
+                "skipServiceAccount": {
+                    "type": "boolean"
+                },
+                "argoProjectName": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "labels": {
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "annotations": {
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "admins": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "viewers": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "selectors": {
+                    "items": {
+                        "$ref": "#/$defs/Selector"
+                    },
+                    "type": "array"
+                },
+                "resources": {
+                    "$ref": "#/$defs/ResourceQuota"
+                },
+                "limitRanges": {
+                    "items": {
+                        "$ref": "#/$defs/LimitRange"
+                    },
+                    "type": "array"
+                },
+                "apps": {
+                    "items": {
+                        "$ref": "#/$defs/App"
+                    },
+                    "type": "array"
+                },
+                "networkPolicy": {
+                    "$ref": "#/$defs/NetworkPolicy"
+                },
+                "overrides": {
+                    "items": {
+                        "$ref": "#/$defs/Override"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "description": "Namespace represents a deployment of a Project into a specific environment"
+        },
+        "NetworkPolicy": {
+            "properties": {
+                "ingress": {
+                    "$ref": "#/$defs/NetworkPolicyRules"
+                },
+                "ingressDeny": {
+                    "$ref": "#/$defs/NetworkPolicyRules"
+                },
+                "egress": {
+                    "$ref": "#/$defs/NetworkPolicyRules"
+                },
+                "egressDeny": {
+                    "$ref": "#/$defs/NetworkPolicyRules"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "ingress"
+            ],
+            "description": "NetworkPolicy is used to provide Ingress and Egress NetworkPolicyRules"
+        },
+        "NetworkPolicyRules": {
+            "properties": {
+                "clusters": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "facilityBMC": {
+                    "type": "boolean"
+                },
+                "facility": {
+                    "type": "boolean"
+                },
+                "facilities": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "namedRanges": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "ipRanges": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "namedRanges"
+            ],
+            "description": "NetworkPolicyRules are used to define the rules for either ingress or egress"
+        },
+        "Override": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "selectors": {
+                    "$ref": "#/$defs/Selector"
+                },
+                "apps": {
+                    "items": {
+                        "$ref": "#/$defs/App"
+                    },
+                    "type": "array"
+                },
+                "networkPolicy": {
+                    "$ref": "#/$defs/NetworkPolicy"
+                },
+                "resources": {
+                    "$ref": "#/$defs/ResourceQuota"
+                },
+                "limitRanges": {
+                    "items": {
+                        "$ref": "#/$defs/LimitRange"
+                    },
+                    "type": "array"
+                },
+                "labels": {
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "description": "Override provides the ability to adjust the configuration."
+        },
+        "ResourceList": {
+            "properties": {
+                "resource": {
+                    "type": "string"
+                },
+                "min": {
+                    "type": "string"
+                },
+                "max": {
+                    "type": "string"
+                },
+                "default": {
+                    "type": "string"
+                },
+                "defaultRequest": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "resource"
+            ],
+            "description": "ResourceList for adding limit ranges to different types of resources"
+        },
+        "ResourceQuota": {
+            "properties": {
+                "cpu": {
+                    "type": "string"
+                },
+                "ram": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+                "cpu",
+                "ram"
+            ],
+            "description": "ResourceQuota is used to apply limits on resources to deployments"
+        },
+        "Selector": {
+            "properties": {
+                "clusters": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "clusterClasses": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "clusterSubClasses": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "clusterDeny": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "environments": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "clusterTags": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "description": "Selector is used to limit which clusters will be used for a deployment"
+        }
+    },
+    "items": {
+        "$ref": "#/$defs/Namespace"
+    },
+    "type": "array"
+}
