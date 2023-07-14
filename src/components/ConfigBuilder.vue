@@ -9,345 +9,362 @@
     </p>
   </div>
 
-  <div class="p-3">
-    <va-stepper v-model="step" :steps="steps" controlsHidden vertical>
-      <template #step-content-0>
-        <div class="grid grid-cols-12 gap-6 ml-4">
-          <p class="col-span-full">
-            Describe the access and resource requirements for this project.
-          </p>
+  <div class="grid grid-cols-1 xxl:grid-cols-2">
+    <div class="p-3">
+      <va-stepper v-model="step" :steps="steps" controlsHidden vertical>
+        <template #step-content-0>
+          <div class="grid grid-cols-12 gap-6 ml-4">
+            <p class="col-span-full">
+              Describe the access and resource requirements for this project.
+            </p>
 
-          <va-input
-            class="col-span-full"
-            v-model="project.name"
-            :rules="[validateName]"
-            :immediateValidation="false"
-            label="Project name"
-            messages="The Argo project name (also the namespace in Kubernetes)"
-          />
-
-          <va-select
-            class="col-span-full"
-            v-model="project.ownerLabel"
-            :options="ownerLabels"
-            :rules="[(v: string) => v.length > 0 || 'Owner is required']"
-            label="Owner label"
-            messages="The owner label is used to easily identify projects in Kubernetes"
-          />
-
-          <va-select
-            class="col-span-full"
-            v-model="project.adminGroups"
-            :options="adminGroups"
-            :rules="[(v: []) => v.length > 0 || 'Admin group is required']"
-            multiple
-            label="Admin group(s)"
-            messages="One or more OIDC groups that will have admin access to the Argo project"
-          />
-
-          <va-slider
-            class="col-span-full xl:col-span-6"
-            v-model="project.cpu"
-            :min="2"
-            :max="20"
-            :step="2"
-            track-label-visible
-            label="CPU limits"
-          />
-
-          <va-slider
-            class="col-span-full xl:col-span-6"
-            v-model="project.memory"
-            :min="2"
-            :max="32"
-            :step="2"
-            track-label-visible
-            label="Memory limits, GB"
-          />
-
-          <va-divider class="col-span-full" />
-          <i class="col-span-full"> Advanced settings </i>
-
-          <va-switch
-            class="col-span-full xl:col-span-6"
-            v-model="project.skipRBAC"
-            label="Skip RBAC restrictions"
-            size="small"
-          />
-
-          <va-switch
-            class="col-span-full xl:col-span-6`"
-            v-model="project.skipServiceAccount"
-            label="Skip service account"
-            size="small"
-          />
-        </div>
-      </template>
-
-      <template #step-content-1>
-        <div class="grid grid-cols-12 gap-6 ml-4">
-          <p class="col-span-full">
-            Tell us about the specific application being deployed.
-          </p>
-
-          <va-input
-            class="col-span-full"
-            v-model="app.name"
-            :rules="[validateName]"
-            label="Application name"
-            messages="The name of the application (could be same as the project name)"
-          />
-
-          <va-input
-            class="col-span-full"
-            v-model="app.repoURL"
-            :rules="[validateRepoURL]"
-            label="Application repo URL"
-            messages="The GitHub URL containing the Helm chart for this application"
-          />
-
-          <va-input
-            class="col-span-full"
-            v-model="app.repoPath"
-            label="Application repo path"
-            messages="Specific path in the repository (if different from .)"
-          />
-
-          <va-input
-            class="col-span-full"
-            v-model="app.repoRevision"
-            label="Application repo branch/revision"
-            messages="The GitHub branch to use (if different from main)"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="app.useClusterValuesFile"
-            label="Include cluster values file"
-            size="small"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="app.useEnvValuesFile"
-            label="Include environment values file"
-            size="small"
-          />
-        </div>
-      </template>
-
-      <template #step-content-2>
-        <div class="grid grid-cols-12 gap-6 ml-4">
-          <p class="col-span-12">Where should we deploy this project?</p>
-
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useEnvironments"
-            label="Select by environment"
-            size="small"
-          />
-
-          <va-select
-            class="col-span-full ml-6 pl-6"
-            v-model="selectors.environments"
-            :disabled="!selectors.useEnvironments"
-            :options="clusterEnvironments"
-            :rules="[(v: []) => v && v.length > 0 || 'Cluster environment is required']"
-            multiple
-            label="Cluster environment(s)"
-            messages="Deploy to all clusters in the selected environment(s)"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useClusterClasses"
-            label="Select by cluster class"
-            size="small"
-          />
-
-          <va-select
-            class="col-span-full ml-6 pl-6"
-            v-model="selectors.clusterClasses"
-            :disabled="!selectors.useClusterClasses"
-            :options="clusterClasses"
-            :rules="[(v: []) => v && v.length > 0 || 'Cluster class is required']"
-            multiple
-            label="Cluster classes"
-            messages="Deploy to all clusters in the selected class(es)"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useClusterSubClasses"
-            label="Select by cluster sub-class"
-            size="small"
-          />
-
-          <va-input
-            class="col-span-full ml-6 pl-6"
-            v-model="selectors.clusterSubClasses[0]"
-            :disabled="!selectors.useClusterSubClasses"
-            :rules="[(v: string) => v && v.length > 0 || 'Cluster subclass cannot be empty']"
-            label="Cluster sub-class"
-            messages="Deploy to all clusters in the selected sub-class"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useClusterTags"
-            label="Select by cluster tag"
-            size="small"
-          />
-
-          <va-select
-            class="col-span-full ml-6 pl-6"
-            v-model="selectors.clusterTags"
-            :disabled="!selectors.useClusterTags"
-            :options="clusterTags"
-            :rules="[(v: []) => v && v.length > 0 || 'Cluster tag is required']"
-            multiple
-            label="Cluster tags"
-            messages="Deploy to all clusters with the selected tag(s)"
-          />
-
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useClusters"
-            label="Select by cluster name"
-            size="small"
-          />
-
-          <div
-            class="col-span-full ml-6 pl-6"
-            v-for="i in [...Array(numSelectorsClusters).keys()]"
-            :key="i"
-          >
             <va-input
-              v-model="selectors.clusters[i]"
-              :disabled="!selectors.useClusters"
-              label="Cluster name"
-              @change="updateNumSelectorsClusters(i)"
+              class="col-span-full"
+              v-model="project.name"
+              :rules="[validateName]"
+              :immediateValidation="false"
+              label="Project name"
+              messages="The Argo project name (also the namespace in Kubernetes)"
+            />
+
+            <va-select
+              class="col-span-full"
+              v-model="project.ownerLabel"
+              :options="ownerLabels"
+              :rules="[(v: string) => v.length > 0 || 'Owner is required']"
+              label="Owner label"
+              messages="The owner label is used to easily identify projects in Kubernetes"
+            />
+
+            <va-select
+              class="col-span-full"
+              v-model="project.adminGroups"
+              :options="adminGroups"
+              :rules="[(v: []) => v.length > 0 || 'Admin group is required']"
+              multiple
+              label="Admin group(s)"
+              messages="One or more OIDC groups that will have admin access to the Argo project"
+            />
+
+            <va-slider
+              class="col-span-full xl:col-span-6"
+              v-model="project.cpu"
+              :min="2"
+              :max="20"
+              :step="2"
+              track-label-visible
+              label="CPU limits"
+            />
+
+            <va-slider
+              class="col-span-full xl:col-span-6"
+              v-model="project.memory"
+              :min="2"
+              :max="32"
+              :step="2"
+              track-label-visible
+              label="Memory limits, GB"
+            />
+
+            <va-divider class="col-span-full" />
+            <i class="col-span-full"> Advanced settings </i>
+
+            <va-switch
+              class="col-span-full"
+              v-model="project.skipRBAC"
+              label="Skip RBAC restrictions"
+              size="small"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="project.skipServiceAccount"
+              label="Skip service account"
+              size="small"
             />
           </div>
+        </template>
 
-          <va-switch
-            class="col-span-full"
-            v-model="selectors.useClustersDeny"
-            label="Exclude specific clusters"
-            size="small"
-          />
+        <template #step-content-1>
+          <div class="grid grid-cols-12 gap-6 ml-4">
+            <p class="col-span-full">
+              Tell us about the specific application being deployed.
+            </p>
 
-          <div
-            class="col-span-full ml-6 pl-6"
-            v-for="i in [...Array(numSelectorsClustersDeny).keys()]"
-            :key="i"
-          >
             <va-input
-              v-model="selectors.clustersDeny[i]"
-              :disabled="!selectors.useClustersDeny"
-              label="Cluster name"
-              @change="updateNumSelectorsClustersDeny(i)"
+              class="col-span-full"
+              v-model="app.name"
+              :rules="[validateName]"
+              label="Application name"
+              messages="The name of the application (could be same as the project name)"
+            />
+
+            <va-input
+              class="col-span-full"
+              v-model="app.repoURL"
+              :rules="[validateRepoURL]"
+              label="Application repo URL"
+              messages="The GitHub URL containing the Helm chart for this application"
+            />
+
+            <va-input
+              class="col-span-full"
+              v-model="app.repoPath"
+              label="Application repo path"
+              messages="Specific path in the repository (if different from .)"
+            />
+
+            <va-input
+              class="col-span-full"
+              v-model="app.repoRevision"
+              label="Application repo branch/revision"
+              messages="The GitHub branch to use (if different from main)"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="app.useClusterValuesFile"
+              label="Include cluster values file"
+              size="small"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="app.useEnvValuesFile"
+              label="Include environment values file"
+              size="small"
             />
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template #step-content-3>
-        <div class="grid grid-cols-12 gap-6 ml-4">
-          <p class="col-span-12">Restrict inbound network access to this app</p>
+        <template #step-content-2>
+          <div class="grid grid-cols-12 gap-6 ml-4">
+            <p class="col-span-12">Where should we deploy this project?</p>
 
-          <va-switch
-            class="col-span-full"
-            v-model="ingress.useNamedRanges"
-            label="Based on named prefix ranges"
-            size="small"
-          />
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useEnvironments"
+              label="Select by environment"
+              size="small"
+            />
 
-          <va-select
-            class="col-span-full ml-6 pl-6"
-            v-model="ingress.namedRanges"
-            :disabled="!ingress.useNamedRanges"
-            :options="namedRanges"
-            :rules="[(v: []) => v.length > 0 || 'At least one named range is required']"
-            multiple
-            label="Named prefix ranges"
-            messages="Allow inbound traffic from the selected named range(s)"
-          />
+            <va-select
+              class="col-span-full ml-6 pl-6"
+              v-model="selectors.environments"
+              :disabled="!selectors.useEnvironments"
+              :options="clusterEnvironments"
+              :rules="[(v: []) => v && v.length > 0 || 'Cluster environment is required']"
+              multiple
+              label="Cluster environment(s)"
+              messages="Deploy to all clusters in the selected environment(s)"
+            />
 
-          <va-switch
-            class="col-span-full"
-            v-model="ingress.useIPRanges"
-            label="Based on specific IP ranges"
-            size="small"
-          />
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useClusterClasses"
+              label="Select by cluster class"
+              size="small"
+            />
 
-          <div
-            class="col-span-full ml-6 pl-6"
-            v-for="i in [...Array(numIngressIPRanges).keys()]"
-            :key="i"
-          >
+            <va-select
+              class="col-span-full ml-6 pl-6"
+              v-model="selectors.clusterClasses"
+              :disabled="!selectors.useClusterClasses"
+              :options="clusterClasses"
+              :rules="[(v: []) => v && v.length > 0 || 'Cluster class is required']"
+              multiple
+              label="Cluster classes"
+              messages="Deploy to all clusters in the selected class(es)"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useClusterSubClasses"
+              label="Select by cluster sub-class"
+              size="small"
+            />
+
             <va-input
-              v-model="ingress.ipRanges[i]"
-              :disabled="!ingress.useIPRanges"
-              label="IP prefix (CIDR)"
-              @change="updateNumIngressIPRanges(i)"
+              class="col-span-full ml-6 pl-6"
+              v-model="selectors.clusterSubClasses[0]"
+              :disabled="!selectors.useClusterSubClasses"
+              :rules="[(v: string) => v && v.length > 0 || 'Cluster subclass cannot be empty']"
+              label="Cluster sub-class"
+              messages="Deploy to all clusters in the selected sub-class"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useClusterTags"
+              label="Select by cluster tag"
+              size="small"
+            />
+
+            <va-select
+              class="col-span-full ml-6 pl-6"
+              v-model="selectors.clusterTags"
+              :disabled="!selectors.useClusterTags"
+              :options="clusterTags"
+              :rules="[(v: []) => v && v.length > 0 || 'Cluster tag is required']"
+              multiple
+              label="Cluster tags"
+              messages="Deploy to all clusters with the selected tag(s)"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useClusters"
+              label="Select by cluster name"
+              size="small"
+            />
+
+            <div
+              class="col-span-full ml-6 pl-6"
+              v-for="i in [...Array(numSelectorsClusters).keys()]"
+              :key="i"
+            >
+              <va-input
+                v-model="selectors.clusters[i]"
+                :disabled="!selectors.useClusters"
+                label="Cluster name"
+                @change="updateNumSelectorsClusters(i)"
+              />
+            </div>
+
+            <va-switch
+              class="col-span-full"
+              v-model="selectors.useClustersDeny"
+              label="Exclude specific clusters"
+              size="small"
+            />
+
+            <div
+              class="col-span-full ml-6 pl-6"
+              v-for="i in [...Array(numSelectorsClustersDeny).keys()]"
+              :key="i"
+            >
+              <va-input
+                v-model="selectors.clustersDeny[i]"
+                :disabled="!selectors.useClustersDeny"
+                label="Cluster name"
+                @change="updateNumSelectorsClustersDeny(i)"
+              />
+            </div>
+          </div>
+        </template>
+
+        <template #step-content-3>
+          <div class="grid grid-cols-12 gap-6 ml-4">
+            <p class="col-span-12">
+              Restrict inbound network access to this app
+            </p>
+
+            <va-switch
+              class="col-span-full"
+              v-model="ingress.useNamedRanges"
+              label="Based on named prefix ranges"
+              size="small"
+            />
+
+            <va-select
+              class="col-span-full ml-6 pl-6"
+              v-model="ingress.namedRanges"
+              :disabled="!ingress.useNamedRanges"
+              :options="namedRanges"
+              :rules="[(v: []) => v.length > 0 || 'At least one named range is required']"
+              multiple
+              label="Named prefix ranges"
+              messages="Allow inbound traffic from the selected named range(s)"
+            />
+
+            <va-switch
+              class="col-span-full"
+              v-model="ingress.useIPRanges"
+              label="Based on specific IP ranges"
+              size="small"
+            />
+
+            <div
+              class="col-span-full ml-6 pl-6"
+              v-for="i in [...Array(numIngressIPRanges).keys()]"
+              :key="i"
+            >
+              <va-input
+                v-model="ingress.ipRanges[i]"
+                :disabled="!ingress.useIPRanges"
+                label="IP prefix (CIDR)"
+                @change="updateNumIngressIPRanges(i)"
+              />
+            </div>
+
+            <va-switch
+              class="col-span-full"
+              v-model="ingress.useClusters"
+              label="Based on specific cluster(s)"
+              size="small"
+            />
+
+            <div
+              class="col-span-full ml-6 pl-6"
+              v-for="i in [...Array(numIngressClusters).keys()]"
+              :key="i"
+            >
+              <va-input
+                v-model="ingress.clusters[i]"
+                :disabled="!ingress.useClusters"
+                label="Cluster name"
+                @change="updateNumIngressClusters(i)"
+              />
+            </div>
+
+            <va-switch
+              class="col-span-full"
+              v-model="ingress.facility"
+              label="Allow traffic from each cluster's facility IPs"
+              size="small"
             />
           </div>
+        </template>
 
-          <va-switch
-            class="col-span-full"
-            v-model="ingress.useClusters"
-            label="Based on specific cluster(s)"
-            size="small"
-          />
-
-          <div
-            class="col-span-full ml-6 pl-6"
-            v-for="i in [...Array(numIngressClusters).keys()]"
-            :key="i"
-          >
-            <va-input
-              v-model="ingress.clusters[i]"
-              :disabled="!ingress.useClusters"
-              label="Cluster name"
-              @change="updateNumIngressClusters(i)"
-            />
+        <template #controls="{ nextStep, prevStep }">
+          <div class="grid grid-cols-2 gap-4 mx-auto">
+            <div>
+              <va-button
+                preset="secondary"
+                border-color="primary"
+                @click="prevStep()"
+                :disabled="step === 0"
+                >Previous</va-button
+              >
+            </div>
+            <div>
+              <va-button
+                preset="secondary"
+                border-color="primary"
+                @click="nextStep()"
+                :disabled="step === steps.length - 1"
+                >Next</va-button
+              >
+            </div>
           </div>
+        </template>
+      </va-stepper>
+    </div>
 
-          <va-switch
-            class="col-span-full xl:col-span-6"
-            v-model="ingress.facility"
-            label="Allow traffic from each cluster's facility IPs"
-            size="small"
-          />
-        </div>
-      </template>
-
-      <template #step-content-4>
-        <div class="flex flex-col w-full ml-4">
-          <p class="mb-4">
-            The following Atlas configuration has been generated based on your
-            inputs:
-          </p>
-          <va-input
-            id="configTextarea"
-            v-model="generatedConfig"
-            class="item"
-            type="textarea"
-            :bordered="true"
-            :min-rows="10"
-            :max-rows="50"
-          />
-        </div>
-      </template>
-
-      <template #controls="{ nextStep, prevStep }">
-        <div class="flex col-span-12 ml-4 mt-3 gap-6">
-          <va-button @click="prevStep()">Previous</va-button>
-          <va-button @click="nextStep()">Next</va-button>
-        </div>
-      </template>
-    </va-stepper>
+    <div class="p-3">
+      <p class="mb-3">
+        The Atlas configuration is generated based on your inputs:
+      </p>
+      <va-input
+        id="configTextarea"
+        v-model="generatedConfig"
+        class="item"
+        type="textarea"
+        :bordered="true"
+        :min-rows="10"
+        :max-rows="50"
+      />
+    </div>
   </div>
 </template>
 
@@ -362,7 +379,6 @@ const steps = [
   { label: "Apps" },
   { label: "Selectors" },
   { label: "Network policies" },
-  { label: "Summary" },
 ]
 
 const ownerLabels = [
@@ -658,43 +674,6 @@ const generatedConfig = computed(() => {
 
   return stringify([config], { defaultStringType: "PLAIN" })
 })
-
-// - name: magnum
-// labels:
-//   owner: nautilus
-// selectors:
-//   - clusters:
-//       - prod-ny5-core
-//       - stage-dc13-core
-// resources:
-//   cpu: 20
-//   ram: 34Gi
-// admins:
-//   - Fleet Services Engineering
-//   - Systems Engineering
-//   - Delivery Engineering
-//   - Metal SRE
-//   - Nautilus
-//   - Software Networking
-//   - Network Engineering
-// apps:
-//   - name: magnum
-//     repoURL: "git@github.com:equinixmetal/k8s-central-magnum.git"
-//     clusterValuesFile: true
-//     values: |
-//       k8s-otel-collector:
-//         clusterInfo: {{ clusterInfo .Cluster .App | toYaml | nindent 10 }}
-//   - name: otel-collector
-//     repoURL: "git@github.com:equinixmetal-helm/k8s-otel-collector.git"
-//     revision: atlas-app-deprecated
-// networkPolicy:
-//   ingress:
-//     namedRanges:
-//       - cluster
-//       - metalInternal
-//       - host
-//     clusters:
-//       - prod-ny5-core
 
 function updateNumIngressClusters(i: Number) {
   if (i == numIngressClusters.value - 1) {

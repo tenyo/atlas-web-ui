@@ -4,7 +4,9 @@
       <va-icon name="rule" class="mr-4" />
       Atlas config validator
     </h4>
-    <p class="mb-4">Validate an Atlas namespace YAML config.</p>
+    <p class="mb-4">
+      Validate an Atlas namespace YAML config against the input schema.
+    </p>
   </div>
 
   <va-input
@@ -18,14 +20,16 @@
     :max-rows="50"
   />
 
-  <va-button @click="validate">Validate</va-button>
+  <va-button preset="secondary" border-color="primary" @click="validate"
+    >Validate</va-button
+  >
 
   <va-alert
     v-if="isFailedValidation"
     color="warning"
     icon="warning"
     outline
-    class="my-3"
+    class="my-4"
   >
     <pre>{{ validationErrors }}</pre>
   </va-alert>
@@ -35,7 +39,7 @@
     color="success"
     icon="check"
     outline
-    class="my-3"
+    class="my-4"
   >
     <pre>OK</pre>
   </va-alert>
