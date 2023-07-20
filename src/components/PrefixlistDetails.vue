@@ -7,11 +7,16 @@
       </div>
     </div>
 
-    <va-list>
-      <va-list-item v-for="(cidr, index) in prefixlist.prefixes" :key="index">
-        {{ cidr }}
-      </va-list-item>
-    </va-list>
+    <p class="mb-4">There are {{ numPrefixes }} prefixes in this list:</p>
+
+    <va-input
+      v-model="textareaContent"
+      class="mb-3"
+      type="textarea"
+      :bordered="true"
+      :min-rows="10"
+      :max-rows="50"
+    />
   </div>
 </template>
 
@@ -31,6 +36,14 @@ const graphql = useGraphqlStore()
 
 const prefixlist = computed(() => {
   return graphql.getCurrentPrefixlist
+})
+
+const numPrefixes = computed(() => {
+  return (prefixlist.value.prefixes || []).length
+})
+
+const textareaContent = computed(() => {
+  return (prefixlist.value.prefixes || []).join("\n")
 })
 
 onMounted(() => {
